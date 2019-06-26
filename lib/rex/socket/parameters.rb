@@ -172,6 +172,22 @@ class Rex::Socket::Parameters
       end
     end
 
+    if (hash['SSLCACert'] and ::File.file?(hash['SSLCACert']))
+      begin
+        self.ssl_ca_cert = ::File.read(hash['SSLCACert'])
+      rescue ::Exception => e
+        elog("Failed to read CA cert: #{e.class}: #{e}", LogSource)
+      end
+    end
+
+    if (hash['SSLCAKey'] and ::File.file?(hash['SSLCAKey']))
+      begin
+        self.ssl_ca_key = ::File.read(hash['SSLCAKey'])
+      rescue ::Exception => e
+        elog("Failed to read CA key: #{e.class}: #{e}", LogSource)
+      end
+    end
+
     if hash['Proxies']
       self.proxies = hash['Proxies'].split(',').map{|a| a.strip}.map{|a| a.split(':').map{|b| b.strip}}
     end
@@ -384,18 +400,30 @@ class Rex::Socket::Parameters
   # The client SSL certificate
   #
   attr_accessor :ssl_client_cert
+
   #
   # The client SSL key
   #
   attr_accessor :ssl_client_key
+
+  #
+  # The client SSL certificate
+  #
+  attr_accessor :ssl_ca_cert
+
+  #
+  # The client SSL key
+  #
+  attr_accessor :ssl_ca_key
+
   #
   # SSL certificate verification mode for SSL context
   attr_accessor :ssl_verify_mode
+
   #
   # Whether we should use IPv6
   # @return [Bool]
   attr_accessor :v6
-
 
   # List of proxies to use
   # @return [String]
