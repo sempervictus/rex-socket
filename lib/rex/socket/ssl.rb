@@ -30,7 +30,9 @@ module Rex::Socket::Ssl
     # certificate. This matches a typical "snakeoil" cert.
     #
     # @return [String, String, Array]
-    def self.ssl_generate_certificate(cn = Rex::Text.rand_hostname, org = Rex::Text.rand_name)
+    def self.ssl_generate_certificate(opts = {cert_vars:{}})
+      cn      = opts[:cert_vars][:cn] ? opts[:cert_vars][:cn] : Rex::Text.rand_hostname
+      org     = opts[:cert_vars][:org] ? opts[:cert_vars][:org] : Rex::Text.rand_name
       yr      = 24*3600*365
       vf      = Time.at(Time.now.to_i - rand(yr * 3) - yr)
       vt      = Time.at(vf.to_i + (rand(9)+1) * yr)
@@ -88,8 +90,8 @@ module Rex::Socket::Ssl
     @@cert_provider.ssl_generate_issuer
   end
 
-  def self.ssl_generate_certificate
-    @@cert_provider.ssl_generate_certificate
+  def self.ssl_generate_certificate(params = {})
+    @@cert_provider.ssl_generate_certificate(params)
   end
 
   #
@@ -102,8 +104,8 @@ module Rex::Socket::Ssl
   #
   # Shim for the ssl_generate_certificate module method
   #
-  def ssl_generate_certificate
-    Rex::Socket::Ssl.ssl_generate_certificate
+  def ssl_generate_certificate(params = {})
+    Rex::Socket::Ssl.ssl_generate_certificate(params)
   end
 
   #
@@ -116,8 +118,10 @@ module Rex::Socket::Ssl
 
     if params.ssl_cert
       key, cert, chain = ssl_parse_pem(params.ssl_cert)
+    elsif params.ssl_cn
+      key, cert, chain = ssl_generate_certificate({cert_vars:{cn: params.ssl_cn}})
     else
-      key, cert, chain = ssl_generate_certificate(params.ssl_cn)
+      key, cert, chain = ssl_generate_certificate
     end
 
     ctx = OpenSSL::SSL::SSLContext.new()
@@ -148,7 +152,7 @@ module Rex::Socket::Ssl
   #
   # This flag determines whether to use the non-blocking openssl
   # API calls when they are available. This is still buggy on
-  # Linux/Mac OS X, but is required on Windows
+  # Linux/Mac OS X (TODO: is this still true?), but is required on Windows
   #
   def allow_nonblock?(sock=self.sock)
     avail = sock.respond_to?(:accept_nonblock)

@@ -384,7 +384,7 @@ class Rex::Socket::Parameters
   attr_accessor :ssl_cipher
 
   # Which Common Name to use for certificate
-  # @return [String}
+  # @return [String]
   attr_accessor :ssl_cn
 
   # The SSL certificate, in pem format, stored as a string.  See
